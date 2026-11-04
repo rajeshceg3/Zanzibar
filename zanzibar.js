@@ -37,6 +37,20 @@ const v2=1+.04*Math.sin(p.getX(i)*.09)*Math.sin(p.getZ(i)*.075);
 colors[i*3]=c.r*v2;colors[i*3+1]=c.g*v2;colors[i*3+2]=c.b*v2;}
 geo.computeVertexNormals();geo.setAttribute('color',new T.BufferAttribute(colors,3));}
 const sandMat=new T.MeshStandardMaterial({vertexColors:true,roughness:.96});
+// The wash belongs to the shoreline surface, not a row of floating point sprites.
+const tideU={time:{value:0},night:{value:0},boost:{value:0}};
+sandMat.onBeforeCompile=shader=>{
+Object.assign(shader.uniforms,{tideTime:tideU.time,tideNight:tideU.night,tideBoost:tideU.boost});
+shader.vertexShader='varying vec3 tideP;\n'+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\ntideP=position;');
+shader.fragmentShader='varying vec3 tideP; uniform float tideTime,tideNight,tideBoost;\n'+shader.fragmentShader;
+shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>',`#include <emissivemap_fragment>
+float lace=.5+.5*sin(tideP.x*2.7+sin(tideP.z*3.1)+tideTime*.7);
+float swell=.12*sin(tideTime*.48+tideP.x*.065+tideP.z*.03);
+float wash=exp(-pow((tideP.y-.015-swell*.25)/.075,2.));
+float filaments=pow(.5+.5*sin(tideP.y*36.+tideP.x*.7+sin(tideP.z*1.7)-tideTime*.6),5.);
+totalEmissiveRadiance+=vec3(.015,.52,.65)*wash*(.45+.35*lace+filaments*.8)*tideNight*(1.+tideBoost*.4);
+`);
+};
 const floor=new T.Mesh(geo,sandMat);floor.receiveShadow=true;scene.add(floor);
 // The sea: a clear lagoon shader - shallow glow near the island, glints that follow the sun.
 const seaU={time:{value:0},night:{value:0},sunDir:{value:new T.Vector3(.9,.16,.25)}};
@@ -52,6 +66,17 @@ float spec=pow(max(dot(reflect(-sd,n),-vd),0.),60.);
 day+=vec3(1.,.95,.8)*spec*.9;
 vec3 nit=mix(vec3(.02,.10,.16),vec3(.05,.16,.26),pow(rip,2.)*.6);
 nit+=vec3(.5,.6,.7)*spec*.4;
+// Match the terrain height so the blue wash follows the actual island contour.
+float d=length(w.xz/vec2(150.,115.));float dome=max(0.,1.-d*d);
+float h=7.*pow(dome,1.5);if(d>1.)h=-3.*pow(min(1.,(d-1.)/.6),.8);
+h+=1.9*exp(-((w.x-15.)*(w.x-15.)/(2.*50.*50.)+(w.z-165.)*(w.z-165.)/(2.*35.*35.)));
+h+=1.6*exp(-((w.x-35.)*(w.x-35.)+(w.z+25.)*(w.z+25.))/(2.*34.*34.));
+float tw=exp(-((w.x+85.)*(w.x+85.)+(w.z-5.)*(w.z-5.))/(2.*40.*40.));h=mix(h,3.5,tw);
+h+=.25*sin(w.x*.21+sin(w.z*.17))*sin(w.z*.19)*(1.-tw)*step(0.0001,dome);
+float swell=.12*sin(time*.48+w.x*.065+w.z*.03);
+float wash=exp(-pow((h+.08-swell)/.18,2.));
+float threads=pow(.5+.5*sin(h*34.+w.x*.7+sin(w.z*1.7)-time*.6),5.);
+nit+=vec3(.01,.48,.64)*wash*(.6+threads*.7);
 gl_FragColor=vec4(mix(day,nit,night),.94);}`}));
 sea.rotation.x=-Math.PI/2;sea.position.y=0;scene.add(sea);
 const dummy=new T.Object3D(),v=(x,y,z)=>new T.Vector3(x,y,z),up=v(0,1,0);
@@ -72,10 +97,18 @@ function addGeo(g,m4,color){const pa=g.attributes.position,nv=pa.count,base=vi,v
 function frond(top,yaw0,e0,droopK,L,w0,c0,c1){
 const S=10,dx=Math.cos(yaw0),dz=Math.sin(yaw0),px=-dz,pz=dx,rows=[];const c2=new T.Color();
 for(let s=0;s<=S;s++){const t=s/S,along=L*t*Math.cos(e0*.5);
-const cy=top.y+L*(Math.sin(e0)*t-droopK*t*t),cx=top.x+dx*along,cz=top.z+dz*along,w=w0*(1-t*.82);
+const cy=top.y+L*(Math.sin(e0)*t-droopK*t*t),cx=top.x+dx*along,cz=top.z+dz*along,w=w0*.28*(1-t*.94);
 c2.copy(c0).lerp(c1,t);tc.copy(c2).multiplyScalar(.88);
 const row={L:pushV(v(cx+px*w,cy-w*.5,cz+pz*w),tc),C:pushV(v(cx,cy,cz),c2),R:pushV(v(cx-px*w,cy-w*.5,cz-pz*w),tc)};rows.push(row);}
-for(let s=0;s<S;s++){const a=rows[s],b=rows[s+1];I.push(a.L,b.L,a.C,b.L,b.C,a.C,a.C,b.C,a.R,b.C,b.R,a.R);}}
+for(let s=0;s<S;s++){const a=rows[s],b=rows[s+1];I.push(a.L,b.L,a.C,b.L,b.C,a.C,a.C,b.C,a.R,b.C,b.R,a.R);}
+// Paired tapered leaflets turn each curved rib into a coconut-palm feather.
+for(let k=1;k<30;k++){const t=k/31,along=L*t*Math.cos(e0*.5),cy=top.y+L*(Math.sin(e0)*t-droopK*t*t),cx=top.x+dx*along,cz=top.z+dz*along;
+const span=w0*5.2*Math.pow(Math.sin(Math.PI*t),.65)*(1-.45*t),sweep=L*.075;
+for(const side of [-1,1]){c2.copy(c0).lerp(c1,t);tc.copy(c2).multiplyScalar(side<0?.82:.98);
+const base=pushV(v(cx-dx*.065,cy,cz-dz*.065),tc),b=pushV(v(cx+dx*.065,cy+.025,cz+dz*.065),c2);
+const mid=pushV(v(cx+px*span*.55*side-dx*sweep*.5+dx*.065,cy-span*.12,cz+pz*span*.55*side-dz*sweep*.5+dz*.065),c2);
+const tip=pushV(v(cx+px*span*side-dx*sweep,cy-span*.35,cz+pz*span*side-dz*sweep),c2);I.push(base,b,mid,base,mid,tip);}}
+}
 function palm(x,z,h,leanA,leanAmt,sd){
 const rings=7,sides=6;let prev=null;const y0=land(x,z);
 for(let r=0;r<=rings;r++){const t=r/rings,cx=x+Math.cos(leanA)*leanAmt*t*t*h,cz=z+Math.sin(leanA)*leanAmt*t*t*h,y=y0+t*h,rad=(.26-.13*t)*(1+.13*Math.sin(t*23+sd*7)),ring=[];
@@ -204,7 +237,7 @@ const stars=new T.Points(starGeo,new T.PointsMaterial({color:0xdfe8ff,size:1.5,t
 const glowTex=(()=>{const cv=document.createElement('canvas');cv.width=cv.height=64;const g2=cv.getContext('2d');const gr=g2.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.35,'rgba(190,255,242,.55)');gr.addColorStop(1,'rgba(120,240,220,0)');g2.fillStyle=gr;g2.fillRect(0,0,64,64);return new T.CanvasTexture(cv);})();
 const plankton=(()=>{const xs=[];for(let a=0;a<6.28;a+=.02){for(let r=80;r<200;r+=1.5){const x=Math.sin(a)*r,z=Math.cos(a)*r;if(Math.abs(land(x,z))<.09)xs.push(x,.12,z);}if(xs.length>27000)break;}
 const g9=new T.BufferGeometry();g9.setAttribute('position',new T.BufferAttribute(new Float32Array(xs),3));
-const p9=new T.Points(g9,new T.PointsMaterial({color:0x4fe8d8,map:glowTex,size:.7,transparent:true,opacity:0,fog:false,depthWrite:false,blending:T.AdditiveBlending}));scene.add(p9);return p9;})();
+const p9=new T.Points(g9,new T.PointsMaterial({color:0x4fe8d8,map:glowTex,size:.22,transparent:true,opacity:0,fog:false,depthWrite:false,blending:T.AdditiveBlending}));scene.add(p9);return p9;})();
 // Sun disc, halo.
 const sunMat=new T.MeshBasicMaterial({color:0xfff4dc,fog:false,transparent:true});const sun=new T.Mesh(new T.CircleGeometry(38,32),sunMat);skyRig.add(sun);
 const halo=new T.Mesh(new T.CircleGeometry(150,32),new T.MeshBasicMaterial({color:0xffdca8,fog:false,transparent:true,opacity:.5,depthWrite:false,map:glowTex,blending:T.AdditiveBlending}));skyRig.add(halo);
@@ -295,7 +328,7 @@ if(on){if(!phraseTimer)schedulePhrase();}else if(phraseTimer){clearTimeout(phras
 $('#sound').setAttribute('aria-pressed',String(on));$('#sound').setAttribute('aria-label',on?'Turn island music off':'Turn island music on');$('#sound').textContent=on?'♫':'♪';};
 document.addEventListener('visibilitychange',()=>{last=performance.now();if(audioCtx){if(document.hidden)audioCtx.suspend();else if($('#sound').getAttribute('aria-pressed')==='true')audioCtx.resume();}});
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-const look=v(0,0,0),sunPos=v(0,0,0),skyTopC=new T.Color(),skyHorC=new T.Color(),sunColC=new T.Color(),nightSand=new T.Color('#7a8aa8'),nightPalm=new T.Color('#22404a'),white=new T.Color('#ffffff');
+const look=v(0,0,0),sunPos=v(0,0,0),skyTopC=new T.Color(),skyHorC=new T.Color(),sunColC=new T.Color(),nightSand=new T.Color('#15243a'),nightPalm=new T.Color('#22404a'),white=new T.Color('#ffffff');
 function animate(now){requestAnimationFrame(animate);if(document.hidden)return;const dt=Math.min((now-last)/1000,.15);last=now;if(!paused)elapsed+=dt;const c=chapters[chapter];
 if(encountered&&encKind==='dhow'){const r2=sailor.rotation.y,qx=Math.sin(r2),qz=Math.cos(r2),hy=Math.atan2(-qx,-qz);const sd=camera.aspect<1?30:19,pt=camera.aspect<1?0:.16,ey=camera.aspect<1?1.6:2.6;encPos.set(sailor.position.x+qx*sd,sailor.position.y+ey,sailor.position.z+qz*sd);if(!down){let dy=hy-targetYaw;while(dy>Math.PI)dy-=2*Math.PI;while(dy<-Math.PI)dy+=2*Math.PI;targetYaw+=dy*Math.min(1,dt*1.6);}targetPitch+=(pt-targetPitch)*Math.min(1,dt*2);}
 camera.position.lerp(encountered&&encPos?encPos:c.pos,1-Math.exp(-dt*4));
@@ -311,10 +344,11 @@ sunlight.position.copy(camera.position).addScaledVector(c.sun,180);sunlight.targ
 skyRig.position.copy(camera.position);
 sunPos.copy(c.sun).normalize().multiplyScalar(900);sun.position.copy(sunPos);sun.lookAt(camera.position);sun.material.opacity=1-night;halo.position.copy(sunPos);halo.lookAt(camera.position);halo.material.opacity=.5*(1-night);
 moon.position.copy(v(.25,.5,.78).normalize().multiplyScalar(900));moon.lookAt(camera.position);moon.material.opacity=night*.95;stars.material.opacity=night*.95;
-sandMat.color.copy(white).lerp(nightSand,night*.55);palmMat.color.copy(white).lerp(nightPalm,night*.8);
+sandMat.color.copy(white).lerp(nightSand,night*.9);palmMat.color.copy(white).lerp(nightPalm,night*.8);
 seaU.time.value=elapsed;seaU.night.value=night;seaU.sunDir.value.copy(c.sun).normalize();
 tideBoost+=(0-tideBoost)*(1-Math.exp(-dt*.25));
-plankton.material.opacity=night*(.6+.25*Math.sin(elapsed*1.3)+.4*tideBoost);
+tideU.time.value=elapsed;tideU.night.value=night;tideU.boost.value=tideBoost;
+plankton.material.opacity=night*(.18+.06*Math.sin(elapsed*1.3)+.1*tideBoost);
 doorOpen+=(doorTarget-doorOpen)*(1-Math.exp(-dt*2.5));
 window.__door.userData.leafL.rotation.y=doorOpen*1.85;window.__door.userData.leafR.rotation.y=-doorOpen*1.85;window.__door.userData.light.intensity=.7+doorOpen*2.2;
 for(let i=0;i<2;i++){const d=dhows[i];d.position.y=.1+Math.sin(elapsed*.7+i*2.1)*.08;d.rotation.z=Math.sin(elapsed*.5+i)*.03;d.rotation.x=Math.sin(elapsed*.62+i*1.3)*.025;}
