@@ -1,0 +1,17 @@
+{
+  "name": "zanzibar",
+  "version": "1.0.0",
+  "description": "An original, procedural 360-degree island world. One imagined corner of Zanzibar: the lagoon's dhows, a Stone Town door, the spice grove and the glowing night tide.",
+  "main": "zanzibar.js",
+  "scripts": {
+    "check": "node --check zanzibar.js && node --check scripts/verify.mjs",
+    "verify": "node scripts/verify.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "playwright": "^1.56.1"
+  },
+  "type": "module"
+}
