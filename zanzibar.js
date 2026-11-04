@@ -59,6 +59,7 @@ function stamp(key,geoI,color,p,s,rot){const b=inst(key,geoI,color);dummy.positi
 const rockGeo=new T.IcosahedronGeometry(1,0),scrubGeo=new T.ConeGeometry(.5,1.0,6);
 let placed=0,guard=0;while(placed<90&&guard++<4000){const a=range(0,6.28),r=range(20,135),x=Math.sin(a)*r,z=Math.cos(a)*r,h=land(x,z);if(h<.6)continue;const s=range(.25,1.1);stamp('rock',rockGeo,placed%3?'#cfc4ac':'#b8ab90',v(x,h-s*.3,z),v(s*1.3,s*.65,s),new T.Quaternion().setFromEuler(new T.Euler(range(0,3),range(0,3),range(0,3))));placed++;}
 placed=0;guard=0;while(placed<70&&guard++<4000){const a=range(0,6.28),r=range(16,125),x=Math.sin(a)*r,z=Math.cos(a)*r,h=land(x,z);if(h<.4||h>4.5)continue;const s=range(.3,.7);for(let k=0;k<3;k++){stamp('scrub',scrubGeo,k?'#5d7a44':'#4c6a38',v(x+range(-.4,.4),h+.28*s,z+range(-.4,.4)),v(s,s*range(.8,1.3),s),new T.Quaternion().setFromEuler(new T.Euler(range(-.25,.25),range(0,6),range(-.25,.25))));}placed++;}
+let palmMat;
 // Coconut palms along the beach ring: ringed leaning trunks, arcing fronds, coconut clusters.
 {const P=[],Cc=[],I=[];let vi=0;const tc=new T.Color();
 const pushV=(p,c)=>{P.push(p.x,p.y,p.z);Cc.push(c.r,c.g,c.b);return vi++;};
@@ -83,7 +84,7 @@ if(rand()<.8){const m=new T.Matrix4();for(let d=0;d<5;d++){const a=range(0,6.28)
 let placedP=0,guardP=0;while(placedP<16&&guardP++<6000){const a=range(0,6.28),r=range(38,105),x=Math.sin(a)*r,z=Math.cos(a)*r,h=land(x,z);if(h<.5||h>3.4)continue;if(Math.abs(x+85)<34&&Math.abs(z-5)<30)continue;palm(x,z,range(4.2,6.4),range(0,6.28),range(.1,.24),range(0,6.28));placedP++;}
 palm(9,106,6.8,.5,.3,2.2);palm(-3,109,5.6,2.4,.18,4.1);palm(30,99,5.2,1.1,.2,5.0);
 const pg=new T.BufferGeometry();pg.setAttribute('position',new T.BufferAttribute(new Float32Array(P),3));pg.setAttribute('color',new T.BufferAttribute(new Float32Array(Cc),3));pg.setIndex(I);pg.computeVertexNormals();
-const palmMat=new T.MeshStandardMaterial({vertexColors:true,roughness:.9,side:T.DoubleSide});const palms=new T.Mesh(pg,palmMat);palms.castShadow=true;scene.add(palms);}
+palmMat=new T.MeshStandardMaterial({vertexColors:true,roughness:.9,side:T.DoubleSide});const palms=new T.Mesh(pg,palmMat);palms.castShadow=true;scene.add(palms);}
 // Stone Town: two coral-rag rows flanking a shaded alley, lime-washed walls, small shuttered windows.
 const townC=v(-85,0,5);townC.y=land(townC.x,townC.z);
 {const wallMat=mat('#e8dcc2',.95),wallMat2=mat('#ddceae',.95),roofMat=mat('#b89a6a',.9),winMat=mat('#2e3a38',.6),beamMat=mat('#6a4a2a',.9);

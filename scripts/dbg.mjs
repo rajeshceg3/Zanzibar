@@ -1,0 +1,11 @@
+import {chromium} from 'playwright';
+const b=await chromium.launch({executablePath:process.env.CHROME_BIN||'/usr/bin/google-chrome',headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
+const p=await b.newPage({viewport:{width:390,height:844}});
+p.on('console',m=>console.log('CONSOLE',m.type(),m.text().slice(0,200)));
+p.on('pageerror',e=>console.log('PAGEERROR',String(e).slice(0,300)));
+p.on('requestfailed',r=>console.log('REQFAIL',r.url(),r.failure()?.errorText));
+await p.goto('https://zanzibar-nine.vercel.app/',{waitUntil:'load'});
+await p.waitForTimeout(12000);
+console.log('STATUS EL:', await p.locator('#status').count(), await p.locator('#status').isVisible().catch(()=>false));
+console.log('CANVAS:', await p.locator('canvas').count());
+await b.close();
