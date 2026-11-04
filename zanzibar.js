@@ -129,6 +129,11 @@ for(const [leaf,side] of [[leafL,1],[leafR,-1]]){
 const panel=mesh(new T.BoxGeometry(.16,3.9,1.42),teak,v(0,1.95,side*.71),v(1,1,1),leaf);
 for(let r2=0;r2<3;r2++)for(let c2=0;c2<2;c2++){mesh(new T.BoxGeometry(.2,.8,.44),teakD,v(.02,.75+r2*1.25,side*(.38+c2*.68)),v(1,1,1),leaf).castShadow=false;}
 for(let s2=0;s2<8;s2++){const st=mesh(new T.SphereGeometry(.05,6,5),brass,v(.12,3.6,side*(.3+s2*.16)),v(1,1,1),leaf);st.castShadow=false;}}
+for(const [ins,xx] of[[1.52,.1],[1.3,.2]]){mesh(new T.BoxGeometry(.16,4.3,.16),teakD,v(xx,2.2,-ins),v(1,1,1),doorG);mesh(new T.BoxGeometry(.16,4.3,.16),teakD,v(xx,2.2,ins),v(1,1,1),doorG);mesh(new T.BoxGeometry(.16,.16,ins*2+.16),teakD,v(xx,4.42,0),v(1,1,1),doorG);}
+for(let r2=0;r2<7;r2++){const ros=mesh(new T.CylinderGeometry(.11,.11,.07,8),r2%2?brass:teakD,v(.3,4.66,-1.35+r2*.45),v(1,1,1),doorG);ros.rotation.z=Math.PI/2;ros.castShadow=false;}
+for(const [leaf,side] of [[leafL,1],[leafR,-1]])for(let r2=0;r2<3;r2++)for(let c2=0;c2<2;c2++){const boss=mesh(new T.SphereGeometry(.085,7,6),brass,v(.14,.75+r2*1.25,side*(.38+c2*.68)),v(1,1,1),leaf);boss.castShadow=false;}
+mesh(new T.BoxGeometry(.5,.18,4.1),teakD,v(.12,.12,0),v(1,1,1),doorG);
+mesh(new T.BoxGeometry(.4,.3,.5),teakD,v(.05,4.5,0),v(1,1,1),doorG);
 doorG.userData.kind='door';doorG.userData.leafL=leafL;doorG.userData.leafR=leafR;
 const doorLight=new T.PointLight(0xffc06a,.7,11);doorLight.position.set(-1.2,2.4,0);doorG.add(doorLight);doorG.userData.light=doorLight;
 window.__door=doorG;}
@@ -166,18 +171,24 @@ const sailor=makeDhow('#f6ecd6');scene.add(sailor);dhows.push(sailor);
 const sailC=v(10,0,156),sailR=36;
 // The Zanzibar red colobus: russet back, white mantle, long dark tail, on a grove branch.
 const colobus=new T.Group();{const fur=mat('#a03822',.95,false),furW=mat('#f0ead8',.95,false),face=mat('#241a16',.8,false);
-mesh(new T.SphereGeometry(1,12,9),fur,v(0,.5,0),v(.55,.38,.3),colobus);
-mesh(new T.SphereGeometry(1,10,7),furW,v(-.1,.62,0),v(.5,.3,.28),colobus);
-mesh(new T.SphereGeometry(1,10,8),face,v(.48,.72,0),v(.2,.2,.18),colobus);
-mesh(new T.SphereGeometry(1,8,6),furW,v(.5,.86,0),v(.16,.12,.15),colobus);
-for(const z of[-.09,.09])mesh(new T.SphereGeometry(.028,5,4),mat('#e8e2d2'),v(.6,.74,z),v(1,1,1),colobus);
-const tail=new T.Group();tail.position.set(-.5,.5,0);
-let tp=null;for(let s2=0;s2<5;s2++){const seg=mesh(new T.CylinderGeometry(.035-.004*s2,.04-.004*s2,.4,5),s2>2?furW:fur,v(0,-.18,0),v(1,1,1),tail);if(tp){seg.position.set(0,-.36,0);tp.add(seg);}tp=seg;}
-tail.rotation.z=.9;colobus.add(tail);colobus.userData.tail=tail;}
+const torso=mesh(new T.SphereGeometry(1,12,10),fur,v(-.02,.42,0),v(.3,.42,.26),colobus);torso.rotation.z=-.35;
+const belly=mesh(new T.SphereGeometry(1,10,8),furW,v(.09,.32,0),v(.19,.28,.19),colobus);belly.rotation.z=-.35;
+mesh(new T.SphereGeometry(1,10,8),furW,v(.14,.82,0),v(.17,.16,.15),colobus);
+mesh(new T.SphereGeometry(1,8,6),face,v(.26,.8,0),v(.1,.11,.1),colobus);
+mesh(new T.SphereGeometry(1,6,5),fur,v(.12,.94,0),v(.12,.07,.12),colobus);
+for(const z of[-.13,.13])mesh(new T.SphereGeometry(1,6,5),furW,v(.2,.76,z),v(.09,.09,.06),colobus);
+for(const z of[-.045,.045])mesh(new T.SphereGeometry(.032,5,4),mat('#e8e2d2'),v(.33,.82,z),v(1,1,1),colobus);
+for(const z of[-.15,.15])mesh(new T.SphereGeometry(.05,6,5),face,v(.1,.83,z),v(1,1,1),colobus);
+for(const z of[-.13,.13]){const arm=mesh(new T.CylinderGeometry(.038,.048,.52,6),fur,v(.17,.33,z),v(1,1,1),colobus);arm.rotation.z=.22;}
+for(const z of[-.15,.15])mesh(new T.SphereGeometry(1,8,6),fur,v(-.15,.12,z),v(.17,.14,.12),colobus);
+for(const z of[-.13,.13])mesh(new T.SphereGeometry(.05,6,5),face,v(.22,.07,z),v(1,1,1),colobus);
+const tail=new T.Group();tail.position.set(-.27,.32,0);
+let tp=null;for(let s2=0;s2<7;s2++){const seg=mesh(new T.CylinderGeometry(.026-.0028*s2,.032-.0028*s2,.3,5),s2>3?furW:fur,v(0,-.13,0),v(1,1,1),tail);if(tp){seg.position.set(0,-.27,0);seg.rotation.z=.13;tp.add(seg);}tp=seg;}
+tail.rotation.z=.5;colobus.add(tail);colobus.userData.tail=tail;}
 {const branchT=land(44,-38);const treeT=new T.Mesh(new T.CylinderGeometry(.12,.19,5.4,7),mat('#5a4028',.95));treeT.position.set(44,branchT+2.7,-38);treeT.castShadow=true;scene.add(treeT);
 const branch=new T.Mesh(new T.CylinderGeometry(.08,.1,3.6,6),mat('#5a4028',.95));branch.rotation.z=Math.PI/2.15;branch.position.set(42.6,branchT+2.9,-38);scene.add(branch);
-for(let b=0;b<4;b++){const blob=new T.Mesh(new T.IcosahedronGeometry(2.0,1),mat('#2e5c2f',.85));blob.position.set(44+range(-.3,.8),branchT+5.9+range(-.2,.6),-38+range(-.7,.8));blob.scale.y=.7;blob.castShadow=true;scene.add(blob);}
-colobus.position.set(41.2,branchT+3.35,-38);colobus.scale.setScalar(1.35);colobus.userData.kind='colobus';scene.add(colobus);}
+for(let b=0;b<4;b++){const blob=new T.Mesh(new T.IcosahedronGeometry(2.0,1),mat('#2e5c2f',.85));blob.position.set(44.3+range(-.3,.8),branchT+6.6+range(-.2,.5),-38+range(-.7,.8));blob.scale.y=.7;blob.castShadow=true;scene.add(blob);}
+colobus.position.set(41.2,branchT+3.18,-38);colobus.scale.setScalar(1.35);colobus.rotation.y=-2.53;colobus.userData.kind='colobus';scene.add(colobus);}
 // Terns over the lagoon.
 const terns=[];for(let i=0;i<6;i++){const d=new T.Group();const tm=mat('#f4f2ea');mesh(new T.SphereGeometry(1,8,5),tm,v(0,0,0),v(.32,.11,.1),d);for(const s of[-1,1]){const w=mesh(new T.ConeGeometry(.08,.55,4),tm,v(0,0,s*.3),v(1,1,1),d);w.rotation.x=s*1.4;d.userData['wing'+(s>0?'R':'L')]=w;}d.userData.kind='tern';scene.add(d);terns.push(d);}
 // Butterflies in the grove.
@@ -191,9 +202,9 @@ const moon=new T.Mesh(new T.CircleGeometry(24,32),new T.MeshBasicMaterial({color
 const starGeo=new T.BufferGeometry(),starPos=new Float32Array(900*3);for(let i=0;i<900;i++){const a=range(0,6.28),e=range(.08,1.5);starPos[i*3]=Math.cos(a)*Math.cos(e)*900;starPos[i*3+1]=Math.sin(e)*900;starPos[i*3+2]=Math.sin(a)*Math.cos(e)*900;}starGeo.setAttribute('position',new T.BufferAttribute(starPos,3));
 const stars=new T.Points(starGeo,new T.PointsMaterial({color:0xdfe8ff,size:1.5,transparent:true,opacity:0,fog:false,depthWrite:false,sizeAttenuation:false}));skyRig.add(stars);
 const glowTex=(()=>{const cv=document.createElement('canvas');cv.width=cv.height=64;const g2=cv.getContext('2d');const gr=g2.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.35,'rgba(190,255,242,.55)');gr.addColorStop(1,'rgba(120,240,220,0)');g2.fillStyle=gr;g2.fillRect(0,0,64,64);return new T.CanvasTexture(cv);})();
-const plankton=(()=>{const xs=[];for(let a=0;a<6.28;a+=.035){for(let r=80;r<200;r+=2){const x=Math.sin(a)*r,z=Math.cos(a)*r;if(Math.abs(land(x,z))<.22)xs.push(x,.12,z);}if(xs.length>18000)break;}
+const plankton=(()=>{const xs=[];for(let a=0;a<6.28;a+=.02){for(let r=80;r<200;r+=1.5){const x=Math.sin(a)*r,z=Math.cos(a)*r;if(Math.abs(land(x,z))<.09)xs.push(x,.12,z);}if(xs.length>27000)break;}
 const g9=new T.BufferGeometry();g9.setAttribute('position',new T.BufferAttribute(new Float32Array(xs),3));
-const p9=new T.Points(g9,new T.PointsMaterial({color:0x4fe8d8,map:glowTex,size:1.15,transparent:true,opacity:0,fog:false,depthWrite:false,blending:T.AdditiveBlending}));scene.add(p9);return p9;})();
+const p9=new T.Points(g9,new T.PointsMaterial({color:0x4fe8d8,map:glowTex,size:.7,transparent:true,opacity:0,fog:false,depthWrite:false,blending:T.AdditiveBlending}));scene.add(p9);return p9;})();
 // Sun disc, halo.
 const sunMat=new T.MeshBasicMaterial({color:0xfff4dc,fog:false,transparent:true});const sun=new T.Mesh(new T.CircleGeometry(38,32),sunMat);skyRig.add(sun);
 const halo=new T.Mesh(new T.CircleGeometry(150,32),new T.MeshBasicMaterial({color:0xffdca8,fog:false,transparent:true,opacity:.5,depthWrite:false,map:glowTex,blending:T.AdditiveBlending}));skyRig.add(halo);
@@ -214,7 +225,7 @@ if(!encPos)encPos=v(0,0,0);
 if(kind==='dhow'){targetPitch=.3;}
 if(kind==='colobus'){encPos.set(colobus.position.x-5.0,colobus.position.y+.6,colobus.position.z+3.5);camera.position.lerp(encPos,.35);aimAt(colobus.position);encAim=colobus.position.clone();}
 if(kind==='door'){doorTarget=1;encPos.set(-85,land(-85,-15.8)+1.75,-15.8);camera.position.lerp(encPos,.35);encAim=window.__door.position.clone();encAim.y+=2.4;aimAt(encAim);}
-if(kind==='tide'){tideBoost=1;encAim=null;let tz=102;while(land(-8,tz)>.25&&tz<150)tz+=1;encPos.set(-8,land(-8,tz-2)+1.35,tz-2);targetYaw=.18;targetPitch=.14;}}
+if(kind==='tide'){tideBoost=1;encAim=null;let tz=102;while(land(-8,tz)>.25&&tz<150)tz+=1;targetYaw=.18;if(camera.aspect<1){encPos.set(-8,land(-8,tz-9)+2.1,tz-9);targetPitch=-.26;}else{encPos.set(-8,land(-8,tz-2)+1.35,tz-2);targetPitch=.14;}}}
 $('#encounter').onclick=()=>encountered?changeChapter(chapter):encounter(chapters[chapter].kind);document.querySelectorAll('[data-chapter]').forEach(b=>b.onclick=()=>changeChapter(+b.dataset.chapter));$('#pause').onclick=()=>{paused=!paused;pauseUI();};$('#about').onclick=()=>$('#notes').showModal();$('#close').onclick=()=>$('#notes').close();$('#notes').onclick=e=>{if(e.target===$('#notes'))$('#notes').close();};
 const pickables=[...dhows,window.__door,colobus];
 canvas.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY,lx:e.clientX,ly:e.clientY};dragged=false;canvas.setPointerCapture(e.pointerId);$('#orientation').classList.remove('show');});canvas.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-down.lx,dy=e.clientY-down.ly;if(Math.hypot(e.clientX-down.x,e.clientY-down.y)>6)dragged=true;targetYaw-=dx*.006;targetPitch=Math.max(-.65,Math.min(.85,targetPitch+dy*.004));down.lx=e.clientX;down.ly=e.clientY;});const caster=new T.Raycaster();canvas.addEventListener('pointerup',e=>{if(down&&!dragged){caster.setFromCamera(new T.Vector2(e.clientX/innerWidth*2-1,1-e.clientY/innerHeight*2),camera);const hit=caster.intersectObjects(pickables,true)[0];if(hit){let o=hit.object;while(o.parent&&!o.userData.kind)o=o.parent;encounter(o.userData.kind);}}down=null;});canvas.addEventListener('pointercancel',()=>down=null);
@@ -286,7 +297,7 @@ document.addEventListener('visibilitychange',()=>{last=performance.now();if(audi
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 const look=v(0,0,0),sunPos=v(0,0,0),skyTopC=new T.Color(),skyHorC=new T.Color(),sunColC=new T.Color(),nightSand=new T.Color('#7a8aa8'),nightPalm=new T.Color('#22404a'),white=new T.Color('#ffffff');
 function animate(now){requestAnimationFrame(animate);if(document.hidden)return;const dt=Math.min((now-last)/1000,.15);last=now;if(!paused)elapsed+=dt;const c=chapters[chapter];
-if(encountered&&encKind==='dhow'){const r2=sailor.rotation.y,qx=Math.sin(r2),qz=Math.cos(r2),hy=Math.atan2(-qx,-qz);encPos.set(sailor.position.x+qx*21,sailor.position.y+2.6,sailor.position.z+qz*21);if(!down){let dy=hy-targetYaw;while(dy>Math.PI)dy-=2*Math.PI;while(dy<-Math.PI)dy+=2*Math.PI;targetYaw+=dy*Math.min(1,dt*1.6);}targetPitch+=(.16-targetPitch)*Math.min(1,dt*2);}
+if(encountered&&encKind==='dhow'){const r2=sailor.rotation.y,qx=Math.sin(r2),qz=Math.cos(r2),hy=Math.atan2(-qx,-qz);const sd=camera.aspect<1?30:19,pt=camera.aspect<1?.16:.16;encPos.set(sailor.position.x+qx*sd,sailor.position.y+2.6,sailor.position.z+qz*sd);if(!down){let dy=hy-targetYaw;while(dy>Math.PI)dy-=2*Math.PI;while(dy<-Math.PI)dy+=2*Math.PI;targetYaw+=dy*Math.min(1,dt*1.6);}targetPitch+=(pt-targetPitch)*Math.min(1,dt*2);}
 camera.position.lerp(encountered&&encPos?encPos:c.pos,1-Math.exp(-dt*4));
 if(encountered&&encAim&&!down)easeAim(dt,encAim);
 if(matchMedia('(prefers-reduced-motion: reduce)').matches){yaw=targetYaw;pitch=targetPitch;}else{yaw+=(targetYaw-yaw)*(1-Math.exp(-dt*9));pitch+=(targetPitch-pitch)*(1-Math.exp(-dt*9));}
