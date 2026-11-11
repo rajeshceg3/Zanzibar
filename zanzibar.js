@@ -1,4 +1,5 @@
 import {canopyLayer} from './canopy.js';
+import {groveFloor} from './grove-floor.js';
 import {createSoundscape} from './soundscape.js';
 import {SOUND_PLACES} from './sound-places.js';
 import * as T from './three.module.min.js';
@@ -202,6 +203,7 @@ for(let i=0;i<18;i++){const spot=new T.Mesh(new T.CircleGeometry(range(.8,1.8),1
 for(let i=0;i<p.count;i++){const x=p.getX(i)+40,z=p.getZ(i)-10;p.setXYZ(i,x,land(x,z)+.09,z);const n=.5+.25*Math.sin(x*.9+z*.7)+.25*Math.sin(x*1.7-z*.6);const col=new T.Color('#423c28').lerp(new T.Color('#716849'),n*.6);c.push(col.r,col.g,col.b);alpha.push(1-T.MathUtils.smoothstep(Math.hypot((x-40)/50,(z+10)/55),.58,1));}
 g.computeVertexNormals();g.setAttribute('color',new T.Float32BufferAttribute(c,3));g.setAttribute('edgeAlpha',new T.Float32BufferAttribute(alpha,1));
 const m=new T.MeshBasicMaterial({vertexColors:true,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1});m.onBeforeCompile=sh=>{sh.vertexShader='attribute float edgeAlpha; varying float vEdge;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvEdge=edgeAlpha;');sh.fragmentShader='varying float vEdge;\n'+sh.fragmentShader.replace('#include <alphatest_fragment>','diffuseColor.a *= vEdge;\n#include <alphatest_fragment>');};const ground=new T.Mesh(g,m);ground.receiveShadow=true;scene.add(ground);}
+groveFloor(T,scene,land);
 // More woodland behind the visitor, so the grove surrounds rather than facing a bare beach.
 for(let i=0;i<13;i++){const a=i*2.399,r=12+(i%4)*4,x=40+Math.cos(a)*r,z=-15+Math.sin(a)*r,h=land(x,z);if(Math.hypot(x-41.2,z+38)<9)continue;const th=3.2+(i%3)*.45;const tr=new T.Mesh(new T.CylinderGeometry(.14,.23,th,7),mat('#5a4028',.96));tr.position.set(x,h+th/2,z);tr.castShadow=true;scene.add(tr);groveCanopy.crown(x,h+th,z,2.3+(i%3)*.2,320);}
 // The colobus perch uses the same leaf language as the rest of the grove.
@@ -211,11 +213,12 @@ for(const [x,z]of[[34,12],[44,19],[56,16],[20,8],[63,-4]]){const h=land(x,z);con
 // Keep the southward colobus sightline open; trunks share one draw call.
 {const poses=[],d=new T.Object3D();
 for(let i=0;i<42;i++){
- const a=i*2.399963,r=24+(i%5)*3.2,x=40+Math.sin(a)*r,z=-4+Math.cos(a)*r,h=land(x,z);
+ const a=i*2.399963,r=24+(i%5)*3.2,x=40+Math.sin(a)*r,z=-20+Math.cos(a)*r,h=land(x,z);
  if(Math.abs(x-42)<5&&z< -20)continue;
- const th=5.6+(i%4)*.6;
+ const th=6.6+(i%4)*.7;
  d.position.set(x,h+th/2,z);d.rotation.set(0,a,0);d.scale.set(.20,th,.20);d.updateMatrix();poses.push(d.matrix.clone());
- groveCanopy.crown(x,h+th,z,3.4+(i%3)*.35,145);
+ groveCanopy.crown(x,h+th,z,4.1+(i%3)*.35,360);
+ groveCanopy.crown(x,h+th*.36,z,3.5+(i%3)*.25,180);
 }
 const trunks=new T.InstancedMesh(new T.CylinderGeometry(.7,1,1,7),mat('#614730',.96),poses.length);poses.forEach((p,i)=>trunks.setMatrixAt(i,p));trunks.castShadow=true;trunks.computeBoundingSphere();scene.add(trunks);
 }
@@ -240,7 +243,16 @@ for(const[x,z,h,r]of[[35,-9,5.6,4.4],[46,-16,6,4.8]]){
  const y=land(x,z),tr=new T.Mesh(new T.CylinderGeometry(.15,.27,h,7),mat('#67513b',.96));tr.position.set(x,y+h/2,z);tr.castShadow=true;scene.add(tr);groveCanopy.crown(x,y+h,z,r,300);
 }
 // Back-layer foliage crosses the downhill sea horizon behind the animal, not its approach.
-for(let i=0;i<9;i++){const x=25+i*3.6,z=-48-(i%2)*3,h=land(x,z);groveCanopy.crown(x,h+4.6,z,3.3,180);}
+for(let i=0;i<9;i++){const x=25+i*3.6,z=-48-(i%2)*3,h=land(x,z),th=5.4+(i%3)*.6;
+ const tr=new T.Mesh(new T.CylinderGeometry(.13,.23,th,7),mat('#67513b',.96));tr.position.set(x,h+th/2,z);scene.add(tr);
+ groveCanopy.crown(x,h+th,z,3.6,280);groveCanopy.crown(x,h+2.1,z,3.1,180);
+}
+// Low background growth connects the distant crowns to the sloping soil.
+// Outside the encounter corridor; these do not float at eye height.
+for(let i=0;i<36;i++){
+ const a=i*2.399963,r=31+(i%4)*2,x=40+Math.sin(a)*r,z=-22+Math.cos(a)*r,h=land(x,z);
+ groveCanopy.crown(x,h+.35,z,3.2+(i%3)*.3,260);
+}
 groveCanopy.finish();
 function mesh(g,material,pos,scale,parent){const o=new T.Mesh(g,material);o.position.copy(pos);o.scale.copy(scale);o.castShadow=true;parent.add(o);return o;}
 const eyeMat=mat('#1a1410');

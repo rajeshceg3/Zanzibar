@@ -12,4 +12,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run check
+      - run: node --test tests/canopy.test.mjs tests/grove-floor.test.mjs
       - run: npm run test:audio
