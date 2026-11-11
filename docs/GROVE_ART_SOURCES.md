@@ -13,3 +13,11 @@ Visual and morphology references checked November 11, 2026:
 - Kimberly Leupo (2016), visitor account and photographs of a Zanzibar mixed spice plantation: anecdotal visual corroboration only. https://www.kimberlyleupo.com/2016/01/stone-town-zanzibar-skipping-through.html
 
 No reference photographs or copied meshes are distributed. All scene meshes are generated here.
+
+## November 11, 19:10 IST study checkpoint
+
+The paired-leaf study uses folded 16-triangle leaves aligned along short opposite sprays, deterministic branch placement, and density-dependent spray counts. The camera and foliage placements are art choices, not geographic or botanical measurements. Leaf shadows are disabled; woody branch shadows remain. Production is unchanged.
+
+Local Chromium study checks cover four pointer-driven directions and the colobus encounter at 390x844 and 1365x900, plus reduced-motion pixel stability. Screenshots were inspected. This is not art acceptance: the sea horizon is still too exposed, the floor is too plain, leaves are oversized, and the repeated straight-fork branch structure remains visible. A raised-midstory experiment was rejected because nearby leaves hid the colobus and some crowns looked unsupported. That experiment is not in this candidate.
+
+The encounter screenshot check now waits for two animation frames and the camera's settled state rather than relying on a fixed 1.8-second delay. The old delay could capture an unfinished camera move. Four pointer steps replace twenty in the quadrant drag, preserving the same gesture distance while reducing software-renderer work.

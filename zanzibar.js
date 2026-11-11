@@ -235,6 +235,12 @@ for(let i=0;i<19;i++){
  const tr=new T.Mesh(new T.CylinderGeometry(.1,.2,th,6),mat('#67513b',.96));tr.position.set(x,h+th/2,z);scene.add(tr);
  groveCanopy.crown(x,h+th,z,3.1,200);groveCanopy.crown(x,h+1.5,z,2.4,150);
 }
+// A pair of overhead branches frames the visitor; the southbound path stays open.
+for(const[x,z,h,r]of[[35,-9,5.6,4.4],[46,-16,6,4.8]]){
+ const y=land(x,z),tr=new T.Mesh(new T.CylinderGeometry(.15,.27,h,7),mat('#67513b',.96));tr.position.set(x,y+h/2,z);tr.castShadow=true;scene.add(tr);groveCanopy.crown(x,y+h,z,r,300);
+}
+// Back-layer foliage crosses the downhill sea horizon behind the animal, not its approach.
+for(let i=0;i<9;i++){const x=25+i*3.6,z=-48-(i%2)*3,h=land(x,z);groveCanopy.crown(x,h+4.6,z,3.3,180);}
 groveCanopy.finish();
 function mesh(g,material,pos,scale,parent){const o=new T.Mesh(g,material);o.position.copy(pos);o.scale.copy(scale);o.castShadow=true;parent.add(o);return o;}
 const eyeMat=mat('#1a1410');

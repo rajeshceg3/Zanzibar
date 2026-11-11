@@ -2,8 +2,8 @@
 // A stylized mixed spice grove, not a surveyed plantation or botanical scale model.
 export function canopyLayer(T,scene){
  const g=new T.BufferGeometry(),p=[],idx=[],c=[];
- for(let row=0;row<4;row++){
-  const t=row/3,w=Math.pow(Math.sin(t*Math.PI),.72)*.19;
+ for(let row=0;row<5;row++){
+  const t=row/4,w=Math.pow(Math.sin(t*Math.PI),.72)*.19;
   for(const side of[-1,0,1]){
    p.push(side*w,t*.78,Math.sin(t*Math.PI)*(side===0?.045:-.018));
    const color=new T.Color('#365f2d').lerp(new T.Color('#81a052'),t*.28+(side===0?.11:0));c.push(color.r,color.g,color.b);
@@ -20,16 +20,16 @@ export function canopyLayer(T,scene){
   for(let k=0;k<arms;k++){
    const a=k*2.399+rand()*.45,rad=r*(.45+rand()*.5),end=v(x+Math.cos(a)*rad,y+(rand()-.3)*r*.8,z+Math.sin(a)*rad);
    const fork=base.clone().lerp(end,.55);fork.y+=r*.15;branch(base,fork,.025+r*.006);branch(fork,end,.014+r*.004);
-   const sprays=Math.max(5,Math.round(count/arms/9));
+   const sprays=Math.max(2,Math.round(count/arms/14));
    for(let j=0;j<sprays;j++){
     const t=.25+j/sprays*.75,start=fork.clone().lerp(end,t),turn=a+(j%2?1:-1)*(1+rand()*.6);
     const tip=start.clone().add(v(Math.cos(turn)*r*(.25+rand()*.25),(rand()-.2)*r*.4,Math.sin(turn)*r*(.25+rand()*.25)));
     branch(start,tip,.009+r*.002);
-    for(let n=1;n<=6;n++)for(const side of[-1,1]){
-     const at=start.clone().lerp(tip,n/6),angle=turn+side*(.8+rand()*.4);
-     d.position.copy(at);d.rotation.set(Math.PI/2+rand()*.65,angle,(rand()-.5)*.6);
-     const s=Math.min(1.3,.65+r*.14)*( .75+rand()*.5);d.scale.set(s,s,s);d.updateMatrix();leaves.push(d.matrix.clone());
-     tones.push(new T.Color().setHSL(.24+rand()*.06,.29+rand()*.16,.42+rand()*.16));
+    for(let n=1;n<=5;n++)for(const side of[-1,1]){
+     const at=start.clone().lerp(tip,n/5),angle=turn+side*(.8+rand()*.4);
+     d.position.copy(at);d.quaternion.setFromUnitVectors(v(0,1,0),v(Math.cos(angle),rand()*.55-.20,Math.sin(angle)).normalize());d.rotateY((rand()-.5)*.7);
+     const s=Math.min(1.4,.72+r*.17)*( .75+rand()*.5);d.scale.set(s,s,s);d.updateMatrix();leaves.push(d.matrix.clone());
+     tones.push(new T.Color().setHSL(.24+rand()*.06,.29+rand()*.16,.64+rand()*.17));
     }
    }
   }
