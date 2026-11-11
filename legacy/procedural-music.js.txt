@@ -1,0 +1,64 @@
+// Retired from playback. Kept for history.
+// The island's music: layered procedural WebAudio - an airy swirl, a breathing drone,
+// sparse plucked phrases and slow pads, each chapter with its own palette.
+// Verification scaffolding: window.__musicStats exposes signal level for the harness; it is not UI.
+let audioCtx=null,musicOn=false,phraseTimer=null,MU=null;
+const palettes=[
+{root:146.83,scale:[0,2,4,7,9,12,14,16],bright:1.0},
+{root:146.83,scale:[0,1,4,5,7,8,11,12],bright:.7},
+{root:146.83,scale:[0,3,5,7,10,12,15,17],bright:.85},
+{root:110.00,scale:[0,5,7,12,17,19,24],bright:.5}];
+let musicRand=811;const mrand=()=>{musicRand=(musicRand*16807)%2147483647;return(musicRand-1)/2147483646};
+function buildMusic(){const ctx=audioCtx=new AudioContext();
+const master=ctx.createGain();master.gain.value=0;
+const comp=ctx.createDynamicsCompressor();comp.threshold.value=-20;comp.ratio.value=6;
+master.connect(comp);comp.connect(ctx.destination);
+const analyser=ctx.createAnalyser();analyser.fftSize=2048;comp.connect(analyser);
+const ir=ctx.createBuffer(2,Math.floor(ctx.sampleRate*2.6),ctx.sampleRate);
+for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.4);}
+const verb=ctx.createConvolver();verb.buffer=ir;const wet=ctx.createGain();wet.gain.value=.55;verb.connect(wet).connect(master);
+const bus=ctx.createGain();bus.connect(master);bus.connect(verb);
+const nb=ctx.createBuffer(1,ctx.sampleRate*3,ctx.sampleRate);const nd=nb.getChannelData(0);let b0=0;for(let i=0;i<nd.length;i++){b0=(b0+Math.random()*.02-.01)/1.012;nd[i]=b0*3;}
+const nsrc=ctx.createBufferSource();nsrc.buffer=nb;nsrc.loop=true;
+const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=620;bp.Q.value=1.1;
+const bpLFO=ctx.createOscillator();bpLFO.frequency.value=.06;const bpLFOg=ctx.createGain();bpLFOg.gain.value=340;bpLFO.connect(bpLFOg).connect(bp.frequency);bpLFO.start();
+const swirl=ctx.createGain();swirl.gain.value=.04;
+const pan=ctx.createStereoPanner();const panLFO=ctx.createOscillator();panLFO.frequency.value=.045;const panLFOg=ctx.createGain();panLFOg.gain.value=.8;panLFO.connect(panLFOg).connect(pan.pan);panLFO.start();
+nsrc.connect(bp).connect(swirl).connect(pan).connect(bus);nsrc.start();
+const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;
+const droneG=ctx.createGain();droneG.gain.value=.05;lp.connect(droneG).connect(bus);
+const o1=ctx.createOscillator();o1.type='sine';o1.connect(lp);
+const o2=ctx.createOscillator();o2.type='triangle';o2.detune.value=5;const g2=ctx.createGain();g2.gain.value=.5;o2.connect(g2).connect(lp);
+const o3=ctx.createOscillator();o3.type='sine';const g3=ctx.createGain();g3.gain.value=.3;o3.connect(g3).connect(lp);
+const drLFO=ctx.createOscillator();drLFO.frequency.value=.05;const drLFOg=ctx.createGain();drLFOg.gain.value=.016;drLFO.connect(drLFOg).connect(droneG.gain);drLFO.start();
+const shim=ctx.createOscillator();shim.type='sine';const shimG=ctx.createGain();shimG.gain.value=.012;
+const trem=ctx.createOscillator();trem.frequency.value=.13;const tremG=ctx.createGain();tremG.gain.value=.008;trem.connect(tremG).connect(shimG.gain);trem.start();
+shim.connect(shimG).connect(bus);
+o1.start();o2.start();o3.start();shim.start();
+MU={ctx,master,bus,analyser,o1,o2,o3,shim};
+window.__musicStats=()=>{const buf=new Float32Array(analyser.fftSize);analyser.getFloatTimeDomainData(buf);let peak=0,sum=0;for(let i=0;i<buf.length;i++){const a=Math.abs(buf[i]);if(a>peak)peak=a;sum+=buf[i]*buf[i];}return{rms:Math.sqrt(sum/buf.length),peak,on:musicOn};};
+retuneMusic();}
+function retuneMusic(){if(!MU)return;const p=palettes[chapter],t=MU.ctx.currentTime;
+MU.o1.frequency.setTargetAtTime(p.root,t,.6);MU.o2.frequency.setTargetAtTime(p.root*1.5,t,.6);MU.o3.frequency.setTargetAtTime(p.root*2,t,.6);MU.shim.frequency.setTargetAtTime(p.root*4,t,.6);}
+function pluck(f,t,bright){const{ctx,bus}=MU;
+const o=ctx.createOscillator();o.type='triangle';o.frequency.value=f;
+const o2=ctx.createOscillator();o2.type='sine';o2.frequency.value=f*2.005;
+const g=ctx.createGain();g.gain.value=0;const g2b=ctx.createGain();g2b.gain.value=.35;
+const p=ctx.createStereoPanner();p.pan.value=mrand()*1.2-.6;
+o.connect(g);o2.connect(g2b).connect(g);g.connect(p).connect(bus);
+const peakV=.05*bright+.018;
+g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(peakV,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+2.4);
+o.start(t);o2.start(t);o.stop(t+2.6);o2.stop(t+2.6);}
+function pad(p,t){const{ctx,bus}=MU;const g=ctx.createGain();g.gain.value=0;g.connect(bus);
+const iv=[0,p.scale[2]||4,7];
+for(const s of iv){const o=ctx.createOscillator();o.type='sine';o.frequency.value=p.root*Math.pow(2,s/12);o.detune.value=mrand()*8-4;o.connect(g);o.start(t);o.stop(t+9.2);}
+g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.026,t+2.8);g.gain.setValueAtTime(.026,t+6);g.gain.linearRampToValueAtTime(0,t+9.2);}
+function schedulePhrase(){phraseTimer=null;if(!musicOn||!MU)return;const p=palettes[chapter];const t0=MU.ctx.currentTime+.15;
+const n=3+Math.floor(mrand()*4);let deg=Math.floor(mrand()*p.scale.length);let t=t0;
+for(let i=0;i<n;i++){deg+=Math.floor(mrand()*3)-1;deg=Math.max(0,Math.min(p.scale.length-1,deg));
+pluck(p.root*2*Math.pow(2,p.scale[deg]/12),t,p.bright);t+=.34+mrand()*.5;}
+pad(p,t0);phraseTimer=setTimeout(schedulePhrase,(7+mrand()*7)*1000);}
+$('#sound').onclick=()=>{if(!audioCtx)buildMusic();const on=$('#sound').getAttribute('aria-pressed')!=='true';musicOn=on;audioCtx.resume();MU.master.gain.setTargetAtTime(on?.9:0,audioCtx.currentTime,.8);
+if(on){if(!phraseTimer)schedulePhrase();}else if(phraseTimer){clearTimeout(phraseTimer);phraseTimer=null;}
+$('#sound').setAttribute('aria-pressed',String(on));$('#sound').setAttribute('aria-label',on?'Turn island music off':'Turn island music on');$('#sound').textContent=on?'♫':'♪';};
+document.addEventListener('visibilitychange',()=>{last=performance.now();if(audioCtx){if(document.hidden)audioCtx.suspend();else if($('#sound').getAttribute('aria-pressed')==='true')audioCtx.resume();}});

@@ -6,7 +6,8 @@
   "scripts": {
     "check": "node --check zanzibar.js && node --check scripts/verify.mjs",
     "verify": "node scripts/verify.mjs",
-    "test": "node tests/chrome-gate.mjs"
+    "test": "node tests/chrome-gate.mjs",
+    "test:audio": "node scripts/audio-structure.cjs && node scripts/browser-gate.cjs"
   },
   "keywords": [],
   "author": "",
