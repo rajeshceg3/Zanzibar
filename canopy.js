@@ -1,4 +1,4 @@
-// Folded broadleaf crowns. One leaf draw and one branch draw for the whole grove.
+// Folded broadleaf crowns. One leaf draw, one crown draw and one branch draw for the whole grove.
 export function canopyLayer(T, scene) {
   const leaf = new T.BufferGeometry();
   const positions=[],indices=[],colors=[];
@@ -17,19 +17,24 @@ export function canopyLayer(T, scene) {
   function branch(a,b,width) {const delta=b.clone().sub(a);d.position.copy(a).add(b).multiplyScalar(.5);d.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),delta.clone().normalize());d.scale.set(width,delta.length(),width);d.updateMatrix();branches.push(d.matrix.clone());}
   function crown(x,y,z,radius,count=260) {
     const center=new T.Vector3(x,y,z);
-    d.position.copy(center);d.rotation.set(0,rand()*6.28,0);d.scale.set(radius*.85,radius*.38,radius*.85);d.updateMatrix();cores.push(d.matrix.clone());
-    for(let i=0;i<7;i++){const a=i*2.399,r=radius*(.35+rand()*.45),end=new T.Vector3(x+Math.cos(a)*r,y+(rand()-.3)*radius*.55,z+Math.sin(a)*r);branch(new T.Vector3(x,y-radius*.7,z),end,.07+radius*.015);}
+    for(let k=0;k<6;k++) {
+      const a=k*2.399,spread=radius*.48;
+      d.position.set(x+Math.cos(a)*spread,y+(rand()-.5)*radius*.3,z+Math.sin(a)*spread);
+      d.rotation.set(rand()*.2,rand()*6.28,rand()*.2);
+      d.scale.set(radius*(.45+rand()*.15),radius*(.28+rand()*.12),radius*(.45+rand()*.15));d.updateMatrix();cores.push(d.matrix.clone());
+    }
+    for(let i=0;i<7;i++){const a=i*2.399,r=radius*(.35+rand()*.45),end=new T.Vector3(x+Math.cos(a)*r,y+(rand()-.3)*radius*.55,z+Math.sin(a)*r);branch(new T.Vector3(x,y-radius*.7,z),end,.025+radius*.01);}
     for(let i=0;i<count;i++) {
-      const a=rand()*Math.PI*2,h=rand()*2-1,r=Math.sqrt(1-h*h)*Math.pow(rand(),.32)*radius;
-      d.position.set(center.x+Math.cos(a)*r,center.y+h*radius*.45,center.z+Math.sin(a)*r);
+      const a=rand()*Math.PI*2,h=rand()*2-1,r=Math.sqrt(1-h*h)*(.92+rand()*.16)*radius;
+      d.position.set(center.x+Math.cos(a)*r,center.y+h*radius*.57,center.z+Math.sin(a)*r);
       d.rotation.set(Math.PI/2+(rand()-.5)*1.3,a+rand(),rand()*1.2-.6);
-      const s=.5+rand()*.6;d.scale.set(s,s,.9*s);d.updateMatrix();leaves.push(d.matrix.clone());
+      const s=.85+rand()*.55;d.scale.set(s,s,.9*s);d.updateMatrix();leaves.push(d.matrix.clone());
     }
   }
   function finish() {
     const coreGeo=new T.SphereGeometry(1,12,8),pa=coreGeo.attributes.position;
     for(let i=0;i<pa.count;i++){const x=pa.getX(i),y=pa.getY(i),z=pa.getZ(i),k=1+.10*Math.sin(x*8+z*5)*Math.cos(y*9+z*4);pa.setXYZ(i,x*k,y*k,z*k);}coreGeo.computeVertexNormals();
-    const core=new T.InstancedMesh(coreGeo,new T.MeshStandardMaterial({color:'#34582e',roughness:.95}),cores.length);
+    const core=new T.InstancedMesh(coreGeo,new T.MeshStandardMaterial({color:'#3b6130',roughness:.95}),cores.length);
     cores.forEach((m,i)=>core.setMatrixAt(i,m));core.castShadow=true;core.computeBoundingSphere();scene.add(core);
     const l=new T.InstancedMesh(leaf,new T.MeshStandardMaterial({vertexColors:true,roughness:.85,side:T.DoubleSide,emissive:'#182e18',emissiveIntensity:.18}),leaves.length);
     leaves.forEach((m,i)=>l.setMatrixAt(i,m));l.castShadow=true;l.computeBoundingSphere();scene.add(l);
