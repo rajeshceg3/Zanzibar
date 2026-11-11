@@ -198,8 +198,8 @@ if(i%3===0)for(let c3=0;c3<4;c3++){const bud=new T.Mesh(new T.SphereGeometry(.06
 for(let i=0;i<3;i++){const a=range(0,6.28),r=range(5,22),x=groveC.x+Math.sin(a)*r,z=groveC.z+Math.cos(a)*r,h=land(x,z);const log=new T.Mesh(new T.CylinderGeometry(.14,.2,range(2,3.4),7),trunkMat);log.position.set(x,h+.16,z);log.rotation.set(Math.PI/2,0,range(0,6.28));log.castShadow=true;scene.add(log);}
 for(let i=0;i<18;i++){const spot=new T.Mesh(new T.CircleGeometry(range(.8,1.8),14),new T.MeshBasicMaterial({color:0xfff2c0,transparent:true,opacity:.16,depthWrite:false}));spot.rotation.x=-Math.PI/2;const a=range(0,6.28),r=range(4,24),x=groveC.x+Math.sin(a)*r,z=groveC.z+Math.cos(a)*r;spot.position.set(x,land(x,z)+.06,z);scene.add(spot);}}
 // Grove soil lies on the same height field as the island and has a soft leaf-litter edge.
-{const g=new T.PlaneGeometry(78,86,48,48);g.rotateX(-Math.PI/2);const p=g.attributes.position,c=[],alpha=[];
-for(let i=0;i<p.count;i++){const x=p.getX(i)+40,z=p.getZ(i)-20;p.setXYZ(i,x,land(x,z)+.09,z);const n=.5+.25*Math.sin(x*.9+z*.7)+.25*Math.sin(x*1.7-z*.6);const col=new T.Color('#423c28').lerp(new T.Color('#716849'),n*.6);c.push(col.r,col.g,col.b);alpha.push(1-T.MathUtils.smoothstep(Math.hypot((x-40)/39,(z+20)/43),.58,1));}
+{const g=new T.PlaneGeometry(100,110,56,56);g.rotateX(-Math.PI/2);const p=g.attributes.position,c=[],alpha=[];
+for(let i=0;i<p.count;i++){const x=p.getX(i)+40,z=p.getZ(i)-10;p.setXYZ(i,x,land(x,z)+.09,z);const n=.5+.25*Math.sin(x*.9+z*.7)+.25*Math.sin(x*1.7-z*.6);const col=new T.Color('#423c28').lerp(new T.Color('#716849'),n*.6);c.push(col.r,col.g,col.b);alpha.push(1-T.MathUtils.smoothstep(Math.hypot((x-40)/50,(z+10)/55),.58,1));}
 g.computeVertexNormals();g.setAttribute('color',new T.Float32BufferAttribute(c,3));g.setAttribute('edgeAlpha',new T.Float32BufferAttribute(alpha,1));
 const m=new T.MeshBasicMaterial({vertexColors:true,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1});m.onBeforeCompile=sh=>{sh.vertexShader='attribute float edgeAlpha; varying float vEdge;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvEdge=edgeAlpha;');sh.fragmentShader='varying float vEdge;\n'+sh.fragmentShader.replace('#include <alphatest_fragment>','diffuseColor.a *= vEdge;\n#include <alphatest_fragment>');};const ground=new T.Mesh(g,m);ground.receiveShadow=true;scene.add(ground);}
 // More woodland behind the visitor, so the grove surrounds rather than facing a bare beach.
@@ -207,6 +207,18 @@ for(let i=0;i<13;i++){const a=i*2.399,r=12+(i%4)*4,x=40+Math.cos(a)*r,z=-15+Math
 // The colobus perch uses the same leaf language as the rest of the grove.
 groveCanopy.crown(44,land(44,-38)+6.8,-38,2.6,420);
 for(const [x,z]of[[34,12],[44,19],[56,16],[20,8],[63,-4]]){const h=land(x,z);const tr=new T.Mesh(new T.CylinderGeometry(.16,.25,4.1,7),mat('#5a4028',.96));tr.position.set(x,h+2.05,z);tr.castShadow=true;scene.add(tr);groveCanopy.crown(x,h+4.1,z,2.8,400);}
+// A continuous outer woodland belt closes the clearing in every direction.
+// Keep the southward colobus sightline open; trunks share one draw call.
+{const poses=[],d=new T.Object3D();
+for(let i=0;i<42;i++){
+ const a=i*2.399963,r=24+(i%5)*3.2,x=40+Math.sin(a)*r,z=-4+Math.cos(a)*r,h=land(x,z);
+ if(Math.abs(x-42)<5&&z< -20)continue;
+ const th=5.6+(i%4)*.6;
+ d.position.set(x,h+th/2,z);d.rotation.set(0,a,0);d.scale.set(.20,th,.20);d.updateMatrix();poses.push(d.matrix.clone());
+ groveCanopy.crown(x,h+th,z,3.4+(i%3)*.35,145);
+}
+const trunks=new T.InstancedMesh(new T.CylinderGeometry(.7,1,1,7),mat('#614730',.96),poses.length);poses.forEach((p,i)=>trunks.setMatrixAt(i,p));trunks.castShadow=true;trunks.computeBoundingSphere();scene.add(trunks);
+}
 groveCanopy.finish();
 function mesh(g,material,pos,scale,parent){const o=new T.Mesh(g,material);o.position.copy(pos);o.scale.copy(scale);o.castShadow=true;parent.add(o);return o;}
 const eyeMat=mat('#1a1410');
