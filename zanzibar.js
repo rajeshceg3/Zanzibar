@@ -219,6 +219,22 @@ for(let i=0;i<42;i++){
 }
 const trunks=new T.InstancedMesh(new T.CylinderGeometry(.7,1,1,7),mat('#614730',.96),poses.length);poses.forEach((p,i)=>trunks.setMatrixAt(i,p));trunks.castShadow=true;trunks.computeBoundingSphere();scene.add(trunks);
 }
+// Layered understory closes the eye-level sea gaps without a solid crown shell.
+// Local art positions, not measured farm geometry. Keep the colobus approach clear.
+for(let i=0;i<29;i++){
+ const a=i*2.399963,r=11+(i%4)*1.9,x=40+Math.sin(a)*r,z=-12+Math.cos(a)*r;
+ if(Math.abs(x-41)<5&&z< -20)continue;
+ const h=land(x,z);groveCanopy.crown(x,h+1.3+(i%3)*.45,z,1.8+(i%3)*.25,140);
+}
+for(const[x,z,h,r]of[[33,-14,6,3.9],[48,-11,6.4,4.2],[31,-3,5.8,3.6],[51,-22,6.5,4]]){
+ const y=land(x,z),tr=new T.Mesh(new T.CylinderGeometry(.16,.3,h,7),mat('#67513b',.96));tr.position.set(x,y+h/2,z);tr.castShadow=true;scene.add(tr);groveCanopy.crown(x,y+h,z,r,360);
+}
+// Staggered saplings behind the perch break the distant ocean stripe.
+for(let i=0;i<19;i++){
+ const x=12+i*3.3,z=-57+(i%3)*3.4,h=land(x,z),th=4.1+(i%4)*.5;
+ const tr=new T.Mesh(new T.CylinderGeometry(.1,.2,th,6),mat('#67513b',.96));tr.position.set(x,h+th/2,z);scene.add(tr);
+ groveCanopy.crown(x,h+th,z,3.1,200);groveCanopy.crown(x,h+1.5,z,2.4,150);
+}
 groveCanopy.finish();
 function mesh(g,material,pos,scale,parent){const o=new T.Mesh(g,material);o.position.copy(pos);o.scale.copy(scale);o.castShadow=true;parent.add(o);return o;}
 const eyeMat=mat('#1a1410');
@@ -280,7 +296,7 @@ const halo=new T.Mesh(new T.CircleGeometry(150,32),new T.MeshBasicMaterial({colo
 const chapters=[
 {title:'The lagoon.<br><i>Dhows at first light.</i>',line:'The tide is out. The shallows hold the sky.',action:'Sail with the dhow',pos:v(2,0,96),yaw:.22,pitch:.03,skyTop:'#7fb8d8',skyHor:'#ffd9b0',fog:.0016,ink:'#123b3f',veil:['#06333a26','#eef7f0c8','#f4faf2f2'],sun:v(.9,.16,.25),sunColor:'#ffd9a8',sunI:2.2,hemiI:1.4,glowAmt:1.0,kind:'dhow'},
 {title:'Stone Town.<br><i>The carved door.</i>',line:'Coral walls keep the shade. Every door is a signature.',action:'Open the carved door',pos:v(-85.5,0,32),yaw:3.13,pitch:.03,skyTop:'#8fc8e0',skyHor:'#e8f0e0',fog:.0020,ink:'#123b3f',veil:['#06333a26','#eef7f0c8','#f4faf2f2'],sun:v(.3,.85,-.2),sunColor:'#fff2dd',sunI:2.6,hemiI:2.3,glowAmt:.4,kind:'door'},
-{title:'The spice grove.<br><i>Cloves in the shade.</i>',line:"Cinnamon, clove, cardamom - the island's second harvest.",action:'Find the red colobus',pos:v(40,0,-4),yaw:Math.PI,pitch:-.03,skyTop:'#9cc8d8',skyHor:'#e8e8c0',fog:.0024,ink:'#123b3f',veil:['#0a332636','#eef5e8c8','#f2f8ecf2'],sun:v(-.4,.6,.4),sunColor:'#ffe8c0',sunI:2.0,hemiI:1.6,glowAmt:.5,kind:'colobus'},
+{title:'The spice grove.<br><i>Cloves in the shade.</i>',line:"Cinnamon, clove, cardamom - the island's second harvest.",action:'Find the red colobus',pos:v(40,0,-12),yaw:Math.PI,pitch:-.03,skyTop:'#9cc8d8',skyHor:'#e8e8c0',fog:.0024,ink:'#123b3f',veil:['#0a332636','#eef5e8c8','#f2f8ecf2'],sun:v(-.4,.6,.4),sunColor:'#ffe8c0',sunI:2.0,hemiI:1.6,glowAmt:.5,kind:'colobus'},
 {title:'The night tide.<br><i>The shore keeps glowing.</i>',line:'The moon pulls the sea away. Some nights, the foam answers back with light.',action:'Walk the glowing tide',pos:v(-8,0,94),yaw:.25,pitch:.1,skyTop:'#060d1e',skyHor:'#12263a',fog:.0010,ink:'#eef4ee',veil:['#040a1426','#060e1cd8','#040810f7'],sun:v(-.4,.7,-.5),sunColor:'#a8c0f0',sunI:1.0,hemiI:.9,glowAmt:.3,kind:'tide'}];
 let chapter=0,yaw=.15,pitch=.03,encPos=null,encKind=null,encAim=null,targetYaw=.15,targetPitch=.03,night=0,paused=matchMedia('(prefers-reduced-motion: reduce)').matches,elapsed=0,last=performance.now(),dragged=false,down=null,encountered=false,frames=0,doorOpen=0,doorTarget=0,tideBoost=0;
 chapters.forEach(c=>{c.pos.y=land(c.pos.x,c.pos.z)+2.6;});camera.position.copy(chapters[0].pos);
