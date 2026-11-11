@@ -326,3 +326,24 @@ for(let i=0;i<clouds.length;i++){const c9=clouds[i];c9.children.forEach(b=>b.mat
 $('#compass').textContent=['N','E','S','W'][Math.floor((((yaw*180/Math.PI)%360+360+45)%360)/90)]+' · '+String(Math.round((yaw*180/Math.PI%360+360)%360)).padStart(3,'0')+'°';
 renderer.render(scene,camera);if(++frames===2){$('#status').remove();$('#orientation').classList.add('show');}if(frames===900)$('#orientation').classList.remove('show');}
 changeChapter(0);requestAnimationFrame(animate);
+
+// Place-true chrome: controls greet, retire, and visit when called.
+{
+  const body=document.body,ui=[$('header'),$('#dock'),$('#compass')],pin=$('#pin-chrome'),hint=$('#chrome-hint'),KEY='zanzibar-chrome-pin',GREET=2600;
+  let pinned=false,timer=0,zone=false;
+  try{pinned=localStorage.getItem(KEY)==='1';}catch(e){}
+  const held=()=>zone||ui.some(el=>el.matches(':focus-within')||el.matches(':hover'));
+  const blurIn=()=>{const a=document.activeElement;if(a&&ui.some(el=>el.contains(a)))a.blur();};
+  const show=()=>{clearTimeout(timer);body.classList.add('chrome-on');if(!pinned)timer=setTimeout(retire,GREET);};
+  const retire=()=>{if(pinned)return;if(held()){timer=setTimeout(retire,GREET);return;}body.classList.remove('chrome-on');blurIn();};
+  const setPin=v=>{pinned=v;pin.setAttribute('aria-pressed',String(v));try{localStorage.setItem(KEY,v?'1':'0');}catch(e){}if(v){clearTimeout(timer);body.classList.add('chrome-on');}else show();};
+  pin.addEventListener('click',()=>setPin(!pinned));
+  hint.addEventListener('click',()=>{show();pin.focus({preventScroll:true});});
+  addEventListener('pointermove',e=>{if(e.pointerType==='touch')return;zone=e.clientY<96||e.clientY>innerHeight-150;if(zone)show();});
+  document.addEventListener('pointerleave',()=>{zone=false;});
+  addEventListener('keydown',e=>{if(e.key==='Escape'&&!pinned&&!$('#notes').open){zone=false;clearTimeout(timer);body.classList.remove('chrome-on');blurIn();}else if(e.key==='Tab')show();});
+  ui.forEach(el=>el.addEventListener('pointerdown',()=>{if(!pinned)show();}));
+  pin.setAttribute('aria-pressed',String(pinned));
+  body.classList.add('chrome-on');
+  if(!pinned)timer=setTimeout(retire,GREET+800);
+}
