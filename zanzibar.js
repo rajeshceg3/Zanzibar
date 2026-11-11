@@ -1,3 +1,4 @@
+import {canopyLayer} from './canopy.js';
 import {createSoundscape} from './soundscape.js';
 import {SOUND_PLACES} from './sound-places.js';
 import * as T from './three.module.min.js';
@@ -30,11 +31,11 @@ h+=.25*Math.sin(x*.21+Math.sin(z*.17))*Math.sin(z*.19)*(1-w)*(dome>0?1:0);
 return h;}
 const geo=new T.PlaneGeometry(700,700,288,288);geo.rotateX(-Math.PI/2);
 {const p=geo.attributes.position;const colors=new Float32Array(p.count*3);
-const dry=new T.Color('#f0e7d2'),wet=new T.Color('#d8c9ab'),shallow=new T.Color('#c9e2cc'),deep=new T.Color('#8fbfae'),c=new T.Color(),humus=new T.Color('#99876a'),earth=new T.Color('#d3c09c');
+const dry=new T.Color('#f0e7d2'),wet=new T.Color('#d8c9ab'),shallow=new T.Color('#c9e2cc'),deep=new T.Color('#8fbfae'),c=new T.Color(),humus=new T.Color('#544c32'),earth=new T.Color('#d3c09c');
 for(let i=0;i<p.count;i++){const h=land(p.getX(i),p.getZ(i));p.setY(i,h);
 if(h>.18)c.copy(dry);else if(h>-.25)c.copy(wet).lerp(dry,Math.max(0,(h+.25)/.43));else c.copy(shallow).lerp(deep,Math.min(1,(-h-.25)/2.2));
 const gx=p.getX(i),gz=p.getZ(i),gd=Math.hypot(gx-40,gz+32),td=Math.hypot(gx+85,gz-2);
-if(h>.3&&gd<38)c.lerp(humus,.55*(1-gd/38));if(h>.3&&td<24)c.lerp(earth,.5*(1-td/24));
+if(h>.3&&gd<44)c.lerp(humus,.90*(1-Math.pow(gd/44,2)));if(h>.3&&td<24)c.lerp(earth,.5*(1-td/24));
 const v2=1+.04*Math.sin(p.getX(i)*.09)*Math.sin(p.getZ(i)*.075);
 colors[i*3]=c.r*v2;colors[i*3+1]=c.g*v2;colors[i*3+2]=c.b*v2;}
 geo.computeVertexNormals();geo.setAttribute('color',new T.BufferAttribute(colors,3));}
@@ -185,17 +186,56 @@ const doorLight=new T.PointLight(0xffc06a,.7,11);doorLight.position.set(-1.2,2.4
 window.__door=doorG;}
 // The spice grove: broadleaf shade trees, clove buds, dappled light on the floor.
 const groveC=v(40,0,-32);groveC.y=land(groveC.x,groveC.z);
+const groveCanopy=canopyLayer(T,scene);
 {const trunkMat=mat('#5a4028',.95),leafMat=mat('#2e5c2f',.85),leafMat2=mat('#3d7038',.85),budMat=mat('#c84a3a',.6,false);
 const segD=(x,z,ax,az,bx,bz)=>{const dx=bx-ax,dz=bz-az,L2=dx*dx+dz*dz;let t=L2?((x-ax)*dx+(z-az)*dz)/L2:0;t=Math.max(0,Math.min(1,t));return Math.hypot(x-(ax+dx*t),z-(az+dz*t));};
 for(let i=0;i<20;i++){const a=i/20*6.28+range(-.3,.3),r=range(9,28),x=groveC.x+Math.sin(a)*r,z=groveC.z+Math.cos(a)*r;if(Math.abs(x-40)<9&&z>-22)continue;if(segD(x,z,35.8,-33.0,41.2,-38)<8)continue;const h=land(x,z);
 const th=range(2.6,4.6),tr=new T.Mesh(new T.CylinderGeometry(.16,.26,th,7),trunkMat);tr.position.set(x,h+th/2,z);tr.castShadow=true;scene.add(tr);
-const nb=5+Math.floor(range(0,2));for(let b=0;b<nb;b++){const blob=new T.Mesh(new T.IcosahedronGeometry(range(1.3,2.4),1),b%2?leafMat:leafMat2);blob.position.set(x+range(-1.6,1.6),h+th+range(-.9,1.3),z+range(-1.6,1.6));blob.scale.y=.68;blob.castShadow=true;scene.add(blob);}
-const skirt=new T.Mesh(new T.IcosahedronGeometry(range(1.0,1.5),1),leafMat);skirt.position.set(x+range(-.6,.6),h+th*.55,z+range(-.6,.6));skirt.scale.y=.8;skirt.castShadow=true;scene.add(skirt);
+groveCanopy.crown(x,h+th,z,range(1.8,2.6),300);
 if(i%3===0){for(let c3=0;c3<6;c3++){const bud=new T.Mesh(new T.SphereGeometry(.09,6,5),budMat);bud.position.set(x+range(-1.6,1.6),h+th+range(-.8,.6),z+range(-1.6,1.6));scene.add(bud);}}}
-for(let i=0;i<26;i++){const a=range(0,6.28),r=range(3,27),x=groveC.x+Math.sin(a)*r,z=groveC.z+Math.cos(a)*r,h=land(x,z);if(segD(x,z,35.8,-33.0,41.2,-38)<3)continue;const bush=new T.Mesh(new T.IcosahedronGeometry(range(.5,1.1),1),i%2?leafMat:leafMat2);bush.position.set(x,h+range(.2,.45),z);bush.scale.y=.6;bush.castShadow=true;scene.add(bush);
+for(let i=0;i<26;i++){const a=range(0,6.28),r=range(3,27),x=groveC.x+Math.sin(a)*r,z=groveC.z+Math.cos(a)*r,h=land(x,z);if(segD(x,z,35.8,-33.0,41.2,-38)<3)continue;groveCanopy.crown(x,h+.45,z,range(.6,1.1),70);
 if(i%3===0)for(let c3=0;c3<4;c3++){const bud=new T.Mesh(new T.SphereGeometry(.06,6,5),budMat);bud.position.set(x+range(-.6,.6),h+range(.4,.8),z+range(-.6,.6));scene.add(bud);}}
 for(let i=0;i<3;i++){const a=range(0,6.28),r=range(5,22),x=groveC.x+Math.sin(a)*r,z=groveC.z+Math.cos(a)*r,h=land(x,z);const log=new T.Mesh(new T.CylinderGeometry(.14,.2,range(2,3.4),7),trunkMat);log.position.set(x,h+.16,z);log.rotation.set(Math.PI/2,0,range(0,6.28));log.castShadow=true;scene.add(log);}
 for(let i=0;i<18;i++){const spot=new T.Mesh(new T.CircleGeometry(range(.8,1.8),14),new T.MeshBasicMaterial({color:0xfff2c0,transparent:true,opacity:.16,depthWrite:false}));spot.rotation.x=-Math.PI/2;const a=range(0,6.28),r=range(4,24),x=groveC.x+Math.sin(a)*r,z=groveC.z+Math.cos(a)*r;spot.position.set(x,land(x,z)+.06,z);scene.add(spot);}}
+// Grove soil lies on the same height field as the island and has a soft leaf-litter edge.
+{const g=new T.PlaneGeometry(100,110,56,56);g.rotateX(-Math.PI/2);const p=g.attributes.position,c=[],alpha=[];
+for(let i=0;i<p.count;i++){const x=p.getX(i)+40,z=p.getZ(i)-10;p.setXYZ(i,x,land(x,z)+.09,z);const n=.5+.25*Math.sin(x*.9+z*.7)+.25*Math.sin(x*1.7-z*.6);const col=new T.Color('#423c28').lerp(new T.Color('#716849'),n*.6);c.push(col.r,col.g,col.b);alpha.push(1-T.MathUtils.smoothstep(Math.hypot((x-40)/50,(z+10)/55),.58,1));}
+g.computeVertexNormals();g.setAttribute('color',new T.Float32BufferAttribute(c,3));g.setAttribute('edgeAlpha',new T.Float32BufferAttribute(alpha,1));
+const m=new T.MeshBasicMaterial({vertexColors:true,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1});m.onBeforeCompile=sh=>{sh.vertexShader='attribute float edgeAlpha; varying float vEdge;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvEdge=edgeAlpha;');sh.fragmentShader='varying float vEdge;\n'+sh.fragmentShader.replace('#include <alphatest_fragment>','diffuseColor.a *= vEdge;\n#include <alphatest_fragment>');};const ground=new T.Mesh(g,m);ground.receiveShadow=true;scene.add(ground);}
+// More woodland behind the visitor, so the grove surrounds rather than facing a bare beach.
+for(let i=0;i<13;i++){const a=i*2.399,r=12+(i%4)*4,x=40+Math.cos(a)*r,z=-15+Math.sin(a)*r,h=land(x,z);if(Math.hypot(x-41.2,z+38)<9)continue;const th=3.2+(i%3)*.45;const tr=new T.Mesh(new T.CylinderGeometry(.14,.23,th,7),mat('#5a4028',.96));tr.position.set(x,h+th/2,z);tr.castShadow=true;scene.add(tr);groveCanopy.crown(x,h+th,z,2.3+(i%3)*.2,320);}
+// The colobus perch uses the same leaf language as the rest of the grove.
+groveCanopy.crown(44,land(44,-38)+6.8,-38,2.6,420);
+for(const [x,z]of[[34,12],[44,19],[56,16],[20,8],[63,-4]]){const h=land(x,z);const tr=new T.Mesh(new T.CylinderGeometry(.16,.25,4.1,7),mat('#5a4028',.96));tr.position.set(x,h+2.05,z);tr.castShadow=true;scene.add(tr);groveCanopy.crown(x,h+4.1,z,2.8,400);}
+// A continuous outer woodland belt closes the clearing in every direction.
+// Keep the southward colobus sightline open; trunks share one draw call.
+{const poses=[],d=new T.Object3D();
+for(let i=0;i<42;i++){
+ const a=i*2.399963,r=24+(i%5)*3.2,x=40+Math.sin(a)*r,z=-4+Math.cos(a)*r,h=land(x,z);
+ if(Math.abs(x-42)<5&&z< -20)continue;
+ const th=5.6+(i%4)*.6;
+ d.position.set(x,h+th/2,z);d.rotation.set(0,a,0);d.scale.set(.20,th,.20);d.updateMatrix();poses.push(d.matrix.clone());
+ groveCanopy.crown(x,h+th,z,3.4+(i%3)*.35,145);
+}
+const trunks=new T.InstancedMesh(new T.CylinderGeometry(.7,1,1,7),mat('#614730',.96),poses.length);poses.forEach((p,i)=>trunks.setMatrixAt(i,p));trunks.castShadow=true;trunks.computeBoundingSphere();scene.add(trunks);
+}
+// Layered understory closes the eye-level sea gaps without a solid crown shell.
+// Local art positions, not measured farm geometry. Keep the colobus approach clear.
+for(let i=0;i<29;i++){
+ const a=i*2.399963,r=11+(i%4)*1.9,x=40+Math.sin(a)*r,z=-12+Math.cos(a)*r;
+ if(Math.abs(x-41)<5&&z< -20)continue;
+ const h=land(x,z);groveCanopy.crown(x,h+1.3+(i%3)*.45,z,1.8+(i%3)*.25,140);
+}
+for(const[x,z,h,r]of[[33,-14,6,3.9],[48,-11,6.4,4.2],[31,-3,5.8,3.6],[51,-22,6.5,4]]){
+ const y=land(x,z),tr=new T.Mesh(new T.CylinderGeometry(.16,.3,h,7),mat('#67513b',.96));tr.position.set(x,y+h/2,z);tr.castShadow=true;scene.add(tr);groveCanopy.crown(x,y+h,z,r,360);
+}
+// Staggered saplings behind the perch break the distant ocean stripe.
+for(let i=0;i<19;i++){
+ const x=12+i*3.3,z=-57+(i%3)*3.4,h=land(x,z),th=4.1+(i%4)*.5;
+ const tr=new T.Mesh(new T.CylinderGeometry(.1,.2,th,6),mat('#67513b',.96));tr.position.set(x,h+th/2,z);scene.add(tr);
+ groveCanopy.crown(x,h+th,z,3.1,200);groveCanopy.crown(x,h+1.5,z,2.4,150);
+}
+groveCanopy.finish();
 function mesh(g,material,pos,scale,parent){const o=new T.Mesh(g,material);o.position.copy(pos);o.scale.copy(scale);o.castShadow=true;parent.add(o);return o;}
 const eyeMat=mat('#1a1410');
 // Dhows: curved wooden hulls, lateen yards and triangular cloth sails.
@@ -233,7 +273,6 @@ let tp=null;for(let s2=0;s2<7;s2++){const seg=mesh(new T.CylinderGeometry(.026-.
 tail.rotation.z=.5;colobus.add(tail);colobus.userData.tail=tail;}
 {const branchT=land(44,-38);const treeT=new T.Mesh(new T.CylinderGeometry(.12,.19,5.4,7),mat('#5a4028',.95));treeT.position.set(44,branchT+2.7,-38);treeT.castShadow=true;scene.add(treeT);
 const branch=new T.Mesh(new T.CylinderGeometry(.08,.1,3.6,6),mat('#5a4028',.95));branch.rotation.z=Math.PI/2.15;branch.position.set(42.6,branchT+2.9,-38);scene.add(branch);
-for(let b=0;b<4;b++){const blob=new T.Mesh(new T.IcosahedronGeometry(2.0,1),mat('#2e5c2f',.85));blob.position.set(44.3+range(-.3,.8),branchT+6.6+range(-.2,.5),-38+range(-.7,.8));blob.scale.y=.7;blob.castShadow=true;scene.add(blob);}
 colobus.position.set(41.2,branchT+3.18,-38);colobus.scale.setScalar(1.35);colobus.rotation.y=-2.53;colobus.userData.kind='colobus';scene.add(colobus);}
 // Terns over the lagoon.
 const terns=[];for(let i=0;i<6;i++){const d=new T.Group();const tm=mat('#f4f2ea');mesh(new T.SphereGeometry(1,8,5),tm,v(0,0,0),v(.32,.11,.1),d);for(const s of[-1,1]){const w=mesh(new T.ConeGeometry(.08,.55,4),tm,v(0,0,s*.3),v(1,1,1),d);w.rotation.x=s*1.4;d.userData['wing'+(s>0?'R':'L')]=w;}d.userData.kind='tern';scene.add(d);terns.push(d);}
@@ -257,12 +296,12 @@ const halo=new T.Mesh(new T.CircleGeometry(150,32),new T.MeshBasicMaterial({colo
 const chapters=[
 {title:'The lagoon.<br><i>Dhows at first light.</i>',line:'The tide is out. The shallows hold the sky.',action:'Sail with the dhow',pos:v(2,0,96),yaw:.22,pitch:.03,skyTop:'#7fb8d8',skyHor:'#ffd9b0',fog:.0016,ink:'#123b3f',veil:['#06333a26','#eef7f0c8','#f4faf2f2'],sun:v(.9,.16,.25),sunColor:'#ffd9a8',sunI:2.2,hemiI:1.4,glowAmt:1.0,kind:'dhow'},
 {title:'Stone Town.<br><i>The carved door.</i>',line:'Coral walls keep the shade. Every door is a signature.',action:'Open the carved door',pos:v(-85.5,0,32),yaw:3.13,pitch:.03,skyTop:'#8fc8e0',skyHor:'#e8f0e0',fog:.0020,ink:'#123b3f',veil:['#06333a26','#eef7f0c8','#f4faf2f2'],sun:v(.3,.85,-.2),sunColor:'#fff2dd',sunI:2.6,hemiI:2.3,glowAmt:.4,kind:'door'},
-{title:'The spice grove.<br><i>Cloves in the shade.</i>',line:"Cinnamon, clove, cardamom - the island's second harvest.",action:'Find the red colobus',pos:v(40,0,-4),yaw:Math.PI,pitch:-.03,skyTop:'#9cc8d8',skyHor:'#e8e8c0',fog:.0024,ink:'#123b3f',veil:['#0a332636','#eef5e8c8','#f2f8ecf2'],sun:v(-.4,.6,.4),sunColor:'#ffe8c0',sunI:2.0,hemiI:1.6,glowAmt:.5,kind:'colobus'},
+{title:'The spice grove.<br><i>Cloves in the shade.</i>',line:"Cinnamon, clove, cardamom - the island's second harvest.",action:'Find the red colobus',pos:v(40,0,-12),yaw:Math.PI,pitch:-.03,skyTop:'#9cc8d8',skyHor:'#e8e8c0',fog:.0024,ink:'#123b3f',veil:['#0a332636','#eef5e8c8','#f2f8ecf2'],sun:v(-.4,.6,.4),sunColor:'#ffe8c0',sunI:2.0,hemiI:1.6,glowAmt:.5,kind:'colobus'},
 {title:'The night tide.<br><i>The shore keeps glowing.</i>',line:'The moon pulls the sea away. Some nights, the foam answers back with light.',action:'Walk the glowing tide',pos:v(-8,0,94),yaw:.25,pitch:.1,skyTop:'#060d1e',skyHor:'#12263a',fog:.0010,ink:'#eef4ee',veil:['#040a1426','#060e1cd8','#040810f7'],sun:v(-.4,.7,-.5),sunColor:'#a8c0f0',sunI:1.0,hemiI:.9,glowAmt:.3,kind:'tide'}];
 let chapter=0,yaw=.15,pitch=.03,encPos=null,encKind=null,encAim=null,targetYaw=.15,targetPitch=.03,night=0,paused=matchMedia('(prefers-reduced-motion: reduce)').matches,elapsed=0,last=performance.now(),dragged=false,down=null,encountered=false,frames=0,doorOpen=0,doorTarget=0,tideBoost=0;
 chapters.forEach(c=>{c.pos.y=land(c.pos.x,c.pos.z)+2.6;});camera.position.copy(chapters[0].pos);
 function pauseUI(){const b=$('#pause');b.setAttribute('aria-pressed',String(paused));b.setAttribute('aria-label',paused?'Resume ambient motion':'Pause ambient motion');b.textContent=paused?'▷':'Ⅱ';}pauseUI();
-function changeChapter(n){chapter=(n+4)%4;const c=chapters[chapter];targetYaw=c.yaw;targetPitch=c.pitch;encountered=false;encKind=null;encAim=null;doorTarget=0;$('#title').innerHTML=c.title;$('#line').textContent=c.line;$('#encounter').innerHTML=c.action+' <span aria-hidden="true">↗</span>';document.querySelectorAll('[data-chapter]').forEach(b=>b.setAttribute('aria-current',String(+b.dataset.chapter===chapter)));document.documentElement.style.setProperty('--ink',c.ink);$('.veil').style.background=`linear-gradient(${c.veil[0]},transparent 28%,transparent 43%,${c.veil[1]} 77%,${c.veil[2]})`;$('#orientation').classList.remove('show');retuneMusic();}
+function changeChapter(n){chapter=(n+4)%4;const c=chapters[chapter];targetYaw=c.yaw;targetPitch=c.pitch;encountered=false;encKind=null;encAim=null;doorTarget=0;$('#title').innerHTML=c.title;$('#line').textContent=c.line;$('#encounter').innerHTML=c.action+' <span aria-hidden="true">↗</span>';document.querySelectorAll('[data-chapter]').forEach(b=>b.setAttribute('aria-current',String(+b.dataset.chapter===chapter)));document.documentElement.style.setProperty('--ink',c.ink);$('.veil').style.background=chapter===2?`linear-gradient(${c.veil[0]},transparent 28%,transparent)`:`linear-gradient(${c.veil[0]},transparent 28%,transparent 43%,${c.veil[1]} 77%,${c.veil[2]})`;$('#orientation').classList.remove('show');retuneMusic();}
 const facts={dhow:['The wind that made an island.','For at least two thousand years, lateen-sailed dhows have ridden the monsoon to Zanzibar - one wind to come, its turn to carry you home.'],door:['A signature in teak.',"Stone Town's carved doors announced who lived within - their trade, their fortune, their homeland. The coral-rag town itself is a UNESCO World Heritage site."],colobus:['Found nowhere else.',"The Zanzibar red colobus lives only on Unguja, the archipelago's main island. Most of the last population shelters in and around Jozani's old forest."],tide:['The sea answers with light.','Twice a day the tide steps back across the flats. On some dark nights, plankton in the wash glow blue wherever the water is stirred.']};
 function aimAt(p){const d=p.clone().sub(camera.position);targetYaw=Math.atan2(d.x,d.z);targetPitch=Math.atan2(d.y,Math.hypot(d.x,d.z));}
 function easeAim(dt,p){const d=p.clone().sub(camera.position);const ty=Math.atan2(d.x,d.z),tp=Math.atan2(d.y,Math.hypot(d.x,d.z));let dy=ty-targetYaw;while(dy>Math.PI)dy-=2*Math.PI;while(dy<-Math.PI)dy+=2*Math.PI;const k=Math.min(1,dt*3);targetYaw+=dy*k;targetPitch+=(tp-targetPitch)*k;}
