@@ -1,0 +1,16 @@
+{
+  "url": "http://127.0.0.1:4187",
+  "log": [
+    "doctor passed at 390: correct title and island started",
+    "390: scene 0 four quadrants via pointer drag",
+    "390: scene 1 four quadrants via pointer drag",
+    "390: scene 2 four quadrants via pointer drag",
+    "390: scene 3 four quadrants via pointer drag",
+    "Navigation-strip pointer swipe changed chapter",
+    "Music signal verified: rms=0.0723 peak=0.167 (signal check only, not a listening judgment)",
+    "Dialog, keyboard look, opt-in music start/mute/fade states verified",
+    "Reduced-motion emulation: paused default and pixel-identical canvas over 700ms"
+  ],
+  "errors": [],
+  "passed": true
+}

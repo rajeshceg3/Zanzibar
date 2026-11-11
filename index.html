@@ -44,6 +44,9 @@ body.chrome-on .chrome-hint{visibility:hidden;animation:none}
 @media(max-width:350px){.tools{gap:3px}header .wordmark{font-size:19px}}
 @media(max-height:620px){main{bottom:max(140px,calc(env(safe-area-inset-bottom) + 140px))}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+
+@media(min-width:1000px){#dock{left:auto;right:34px;transform:none;width:min(480px,calc(100vw - 540px))}}
+@media(min-width:601px) and (max-width:999px){main{bottom:184px}}
 </style></head><body class="chrome-on">
 <canvas id="island" tabindex="0" aria-label="An imagined Zanzibar: a turquoise lagoon with dhows, a Stone Town alley, a spice grove and a glowing night tide."></canvas><div class="veil"></div>
 <header class="chrome chrome-top"><a class="wordmark" href="./" aria-label="Zanzibar home">Zanzibar.</a><div class="tools"><button id="pause" aria-label="Pause ambient motion" aria-pressed="false">Ⅱ</button><button id="sound" aria-label="Turn environmental sound on" aria-pressed="false">◌</button><button id="about" aria-label="About this island">i</button><button id="pin-chrome" aria-label="Keep controls showing" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6 Q14.6 3.4 14.4 6 Q14.2 8 12 8 Q9.8 7.8 9.6 5.8 Q9.6 3.6 12 3.6 Z"/><path d="M12 8 L12.2 20"/><path d="M8.4 11.2 L15.6 11"/><path d="M5 14.6 Q6 19.6 12 20.4 Q18 19.4 19 14.4"/></svg></button></div></header><button id="chrome-hint" class="chrome-hint" aria-label="Show controls"><svg viewBox="0 0 44 52" aria-hidden="true"><path d="M21 3 L21.4 36"/><path d="M21 5 Q34 18 36.4 33 L21.4 33.6"/><path d="M19 12 Q10 22 6.6 33 L19.4 33.4"/><path d="M6 40 Q22 46 38.6 39.6"/><path d="M12 48 Q22 45 32 47.6"/></svg></button><div id="compass" class="chrome chrome-top" aria-hidden="true">N · 000°</div>
